@@ -1,0 +1,46 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          vbaner
+# Required-Start:    $network $syslog
+# Required-Stop:     $network $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      
+# Short-Description: Start the Virtual Expo Varnish AutoBan Manager
+# Description:       Ban 'Em All!
+### END INIT INFO
+
+set -e
+
+VBANER="/opt/ve/vbaner/vbaner.py"
+PIDFILE=/var/run/vbaner.pid
+
+# Check for daemon presence
+[ -x "$VBANER" ] || exit 0
+
+# Get lsb functions
+. /lib/lsb/init-functions
+
+case "$1" in
+  start)
+    log_begin_msg "Starting vbaner..."
+    start-stop-daemon --start --quiet --oknodo -p $PIDFILE --exec "$VBANER" -- $OPTIONS
+    log_end_msg $?
+    ;;
+  stop)
+    log_begin_msg "Stopping vbaner..."
+    start-stop-daemon --stop --quiet -p $PIDFILE
+    log_end_msg $?
+    ;;
+  restart)
+    $0 stop
+    sleep 1
+    $0 start
+    ;;
+  status)
+    status_of_proc -p $PIDFILE "$VBANER" vbaner
+    ;;
+  *)
+    log_success_msg "Usage: $0 {start|stop|restart|status}"
+    exit 1
+esac
+
