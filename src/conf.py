@@ -11,6 +11,13 @@ max_tries = 3
 # mongodb URL
 db_addr = 'mongodb://user:passwd@mongodb_srv.company.com:27017/vban'
 
+# mapping between mongodb attribute and varnish HTTP pseudo-header
+# these headers are stored by Varnish in the cached objects to allow
+# for matching of bans regexp.
+fk_map = { 'companyId': 'X-VE-FK-CompanyID',
+           'site': 'X-VE-Site'
+         }
+
 # vnid: hostname
 srvlist = { 	'int01': 'internal01.comapny.com',
 		'int02': 'internal02.company.com',

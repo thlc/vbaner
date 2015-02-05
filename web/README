@@ -1,0 +1,4 @@
+This is the web interface of vbaner.
+It allows you to track the status of bans, and to submit new ones.
+
+It uses Python, along with Apache mod_wsgi.

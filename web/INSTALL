@@ -1,0 +1,33 @@
+Under Debian/Ubuntu:
+
+# a2enmod wsgi
+# cat > /etc/apache2/sites-available/vbaner
+<VirtualHost *:80>
+   ServerName vbaner.company.com
+
+   WSGIDaemonProcess vbaner user=www-data group=www-data processes=1 threads=1
+   WSGIScriptAlias / /srv/http/vbaner.company.com/vbaner.wsgi
+
+   <Directory /srv/http/vbaner.company.com/vbaner.wsgi>
+     WSGIProcessGroup vbaner
+     WSGIApplicationGroup %{GLOBAL}
+     Order Deny,Allow
+     Deny from all
+     Allow from 42.42.42.42
+   </Directory>
+     
+
+   <Location "/">
+     Order Deny,Allow
+     Deny from all
+     Allow from 42.42.42.42
+   </Location>
+</VirtualHost>
+EOF
+
+
+Adjust the paths according to where you want to install vbaner.
+Then:
+
+# a2ensite vbaner
+# service apache2 reload

@@ -1,0 +1,62 @@
+
+                          Varnish AutoBan Manager
+			  -----------------------
+
+
+  The goal of Varnish AutoBan Manager is to manage proper deployement
+of bans on a farm of Varnish servers using a MongoDB collection as a source.
+Backoffice applications generate bans requests that they insert in a ollection
+that is polled at a regular interval by vbaner, which in turns transforms these
+requests in actual bans on every single server of your infrastructure.
+
+  The workflow is as follow:
+
+
+			   Backoffice update generates
+			      a ban request insert
+
+				     _____
+				       |
+				       |   insert
+				       v
+
+				    MongoDB
+
+				       ^
+				       |   poll
+				     __|__
+
+				vbaner.py daemon
+
+				     _____
+				       |
+				       |   push (HTTP method)
+				       v
+
+			 Ban applied on every varnishd
+
+  
+  This program is targeted at architectures serving cached content with long
+TTLs who sometimes need to invalidate elements when they are updated from a
+backoffice application. It allows to drastically increase TTLs, and thus
+cache hit ratio, without having to wait when an update is performed by the
+content managers.
+
+
+  The interface between invalidation requests "generators" (backoffice application, but also humans) and vbaner is a MongoDB collection. The "generator" inserts
+a document in the "new_requests" collection, which contains the appropriate
+parameters defining what is to be invalidated. It could be, for example, the
+unique identifier of a product that has had its specifications modified by its
+manufacturer.
+
+  The vbaner.py polls this collection at regular intervals, and will process
+all documents found, creating a new, more complete document in the "bans"
+collection. This "ban" document contains all the parameters given in the ban
+request, as well as extended informations regarding its status (new,
+processing, partially failed, completely failed, etc.), which servers it has
+been pushed to so far, where it comes from, when it was added, etc.  This is
+where vbaner.py keeps track of every ban it has processed, or has to process.
+
+  From this document, one can view the status of any ban processed by vbaner.py,
+see which servers it has been applied on, or which servers it failed to be
+applied, the number of retries that has been attempted, etc.

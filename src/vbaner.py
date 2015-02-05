@@ -1,7 +1,9 @@
 #!/usr/bin/python2.7
 
 #
-# Virtual Expo Varnish AutoBan Manager - Thomas Lecomte
+# Varnish AutoBan Manager
+#
+# Thomas Lecomte <th.lecomte@gmail.com>
 #
 # Push bans on a farm of Varnish servers, imported from a MongoDB database.
 #
@@ -24,11 +26,6 @@ execfile(os.path.dirname(sys.argv[0]) + '/conf.py')
 # global variables
 client = bans = new_requests = 0
 running = True
-
-# mapping between mongodb attribute and varnish HTTP pseudo-header
-fk_map = { 'companyId': 'X-VE-FK-CompanyID',
-           'site': 'X-VE-Site'
-         }
 
 # CLI arguments
 args = False
@@ -213,7 +210,7 @@ def check_running():
 def main():
 	global args
 
-	parser = argparse.ArgumentParser(description='Virtual Expo Varnish AutoBan manager')
+	parser = argparse.ArgumentParser(description='VirtualExpo Varnish AutoBan manager')
 	parser.add_argument('--nodaemon', action='store_true', help='stay in foreground')
 	parser.add_argument('--stdout',   action='store_true', help='log to stdout instead of syslog')
 	parser.add_argument('--facility', nargs=1, default=syslog_facility, help='syslog facility to log to')
