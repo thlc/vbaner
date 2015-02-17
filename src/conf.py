@@ -15,7 +15,8 @@ db_addr = 'mongodb://user:passwd@mongodb_srv.company.com:27017/vban'
 # these headers are stored by Varnish in the cached objects to allow
 # for matching of bans regexp.
 fk_map = { 'companyId': 'X-VE-FK-CompanyID',
-           'site': 'X-VE-Site'
+           'site': 'X-VE-Site',
+           'matchRule': 'X-VE-MatchedRule'
          }
 
 # vnid: hostname
