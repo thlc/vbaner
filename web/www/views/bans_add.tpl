@@ -10,8 +10,10 @@
 
 <div class='center'>
 
-<div style="margin: 0 auto; width: 300px;">
+<div style="margin: 0 auto; width: 400px;">
+
 <form action="/ban/submit" method="post" style="width: 50%;">
+ <input type="hidden" name='ban-type' value="purge-by-company">
  <table id='foo'>
  <tr><td>CompanyId</td><td><input name="companyId"></td></tr>
  <tr><td>Site</td><td>
@@ -25,6 +27,17 @@
  <tr><td></td><td><button>Submit</button></td></tr>
  </table>
 </form>
+
+<hr style="width: 100%;" />
+
+<form action="/ban/submit" method="post" style="width: 50%;">
+ <table id='foo'>
+ <input type="hidden" name='ban-type' value="purge-by-matchrule">
+ <tr><td>MatchRule ID</td><td><input name="matchRule"></td></tr>
+ <tr><td></td><td><button>Submit</button></td></tr>
+ </table>
+</form>
+
 </div>
 
 

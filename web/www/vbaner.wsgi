@@ -53,9 +53,18 @@ def bans_add():
 def ban_submit():
     global new_requests
 
-    companyId = request.forms.get('companyId')
-    site = request.forms.get('site')
-    doc = { "site": site, "companyId": companyId, "origin": "vbaner/"+request.environ.get('REMOTE_ADDR') }
+    ban_type = request.forms.get('ban-type')
+
+    if ban_type == 'purge-by-matchrule':
+        mrid = request.forms.get('matchRule')
+        doc = { "matchRule": mrid, "origin": "vbaner/"+request.environ.get('REMOTE_ADDR') }
+
+    elif ban_type == 'purge-by-companyd':
+        companyId = request.forms.get('companyId')
+        site = request.forms.get('site')
+        doc = { "site": site, "companyId": companyId, "origin": "vbaner/"+request.environ.get('REMOTE_ADDR') }
+
+    # insert the ban request
     open_db()
     ban_id = new_requests.insert( doc )
     close_db()
