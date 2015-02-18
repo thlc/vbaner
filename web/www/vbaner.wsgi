@@ -59,7 +59,7 @@ def ban_submit():
         mrid = request.forms.get('matchRule')
         doc = { "matchRule": mrid, "origin": "vbaner/"+request.environ.get('REMOTE_ADDR') }
 
-    elif ban_type == 'purge-by-companyd':
+    elif ban_type == 'purge-by-company':
         companyId = request.forms.get('companyId')
         site = request.forms.get('site')
         doc = { "site": site, "companyId": companyId, "origin": "vbaner/"+request.environ.get('REMOTE_ADDR') }
