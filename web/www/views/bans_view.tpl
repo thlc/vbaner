@@ -9,7 +9,7 @@
 % include('header.tpl', title='Bans')
 
 <div class='center'>
-<table class="pretty">
+<table class='pretty'>
     <tr>
       <th>ID</th>
       <th>Submission date</th>
