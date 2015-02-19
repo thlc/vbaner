@@ -55,14 +55,20 @@ def ban_submit():
 
     ban_type = request.forms.get('ban-type')
 
-    if ban_type == 'purge-by-matchrule':
-        mrid = request.forms.get('matchRule')
-        doc = { "matchRule": mrid, "origin": "vbaner/"+request.environ.get('REMOTE_ADDR') }
+    mrid = request.forms.get('matchRule')
+    site = request.forms.get('site')
+    companyId = request.forms.get('companyId')
 
-    elif ban_type == 'purge-by-company':
-        companyId = request.forms.get('companyId')
-        site = request.forms.get('site')
-        doc = { "site": site, "companyId": companyId, "origin": "vbaner/"+request.environ.get('REMOTE_ADDR') }
+    doc = { "origin": "vbaner/"+request.environ.get('REMOTE_ADDR') }
+
+    for attr in [ 'matchRule', 'site', 'companyId' ]:
+        val = request.forms.get(attr)
+        if len(val) > 0:
+            doc[attr] = val
+
+    if len(doc) < 2:
+        redirect("/ban/msg/?err=42")
+        return
 
     # insert the ban request
     open_db()
