@@ -53,12 +53,6 @@ def bans_add():
 def ban_submit():
     global new_requests
 
-    ban_type = request.forms.get('ban-type')
-
-    mrid = request.forms.get('matchRule')
-    site = request.forms.get('site')
-    companyId = request.forms.get('companyId')
-
     doc = { "origin": "vbaner/"+request.environ.get('REMOTE_ADDR') }
 
     for attr in [ 'matchRule', 'site', 'companyId' ]:
