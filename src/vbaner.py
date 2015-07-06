@@ -80,13 +80,15 @@ def increment_ban_tries(ban):
 	bans.update({ '_id': ban['_id'] }, { "$inc": { "tries": 1 } } )
 
 def do_ban(host, ban_str):
-	http = httplib.HTTPConnection(host, 80, timeout=5)
-	http.putrequest("VEBAN", "/")
-	http.putheader('X-VE-BanKey', ban_key)
-	http.putheader('X-VE-BanTarget', 'html')
-	http.putheader('X-VE-BanStr', ban_str)
-	http.endheaders()
-	response = http.getresponse()
+	try:
+		http = httplib.HTTPConnection(host, 80, timeout=5)
+		http.putrequest("VEBAN", "/")
+		http.putheader('X-VE-BanKey', ban_key)
+		http.putheader('X-VE-BanTarget', 'html')
+		http.putheader('X-VE-BanStr', ban_str)
+		http.endheaders()
+		response = http.getresponse()
+	except: return -1
 
 	return response.status
 
