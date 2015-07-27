@@ -1,15 +1,15 @@
 #!/usr/bin/python2.7
 
 #
-# Varnish AutoBan Manager
-#
-# Thomas Lecomte <th.lecomte@gmail.com>
+# Virtual Expo Varnish AutoBan Manager - Thomas Lecomte
 #
 # Push bans on a farm of Varnish servers, imported from a MongoDB database.
 #
 
 from datetime import datetime
+from multiprocessing import Process
 import pymongo
+import socket
 import httplib
 import signal, os
 import time
@@ -27,6 +27,12 @@ execfile(os.path.dirname(sys.argv[0]) + '/conf.py')
 client = bans = new_requests = 0
 running = True
 
+# mapping between mongodb attribute and varnish HTTP pseudo-header
+fk_map = { 'companyId': 'X-VE-FK-CompanyID',
+           'site': 'X-VE-Site',
+           'matchRule': 'X-VE-MatchedRule'
+         }
+
 # CLI arguments
 args = False
 
@@ -36,29 +42,36 @@ def log(msg):
 	else:
 		syslog.syslog(args.priority, "[%s] %s" % (str(datetime.now()), msg))
 
-def handle_new_req(req):
-	servers_pending = { }
-	for s in srvlist: servers_pending[s] = 'PENDING'
-	request_id = req['_id']
-        del req['_id']
-	if 'origin' in req:
-          origin = req['origin']
-          del req['origin']
-	else:
-	  origin = 'backoffice'
+def handle_new_req():
+	global running
+	global new_requests
+	global bans
 
-	newban_id = bans.insert({	'_id': request_id,
-					'status': 'pending',
-					'parameters': req,
-					'extendedStatus': servers_pending,
-					'priority': default_priority,
-					'origin': origin,
-					'tries': 0,
-					'createdAt': datetime.utcnow()
-			}, manipulate=True, j=True)
+	while running:
+		time.sleep(1)
+		for req in new_requests.find():
+			servers_pending = { }
+			for s in srvlist: servers_pending[s] = 'PENDING'
+			request_id = req['_id']
+			del req['_id']
+			if 'origin' in req:
+			  origin = req['origin']
+			  del req['origin']
+			else:
+			  origin = 'backoffice'
 
-	new_requests.remove( { '_id': request_id } )
-	log( "reqid:%s imported as %s" % (request_id, newban_id) )
+			newban_id = bans.insert({	'_id': request_id,
+							'status': 'pending',
+							'parameters': req,
+							'extendedStatus': servers_pending,
+							'priority': default_priority,
+							'origin': origin,
+							'tries': 0,
+							'createdAt': datetime.utcnow()
+					}, manipulate=True, j=True)
+
+			new_requests.remove( { '_id': request_id } )
+			log( "reqid:%s imported as %s" % (request_id, newban_id) )
 
 def set_ban_status(ban, status):
 	log ( "[%s] status: %s" % (ban['_id'], status) )
@@ -88,7 +101,8 @@ def do_ban(host, ban_str):
 		http.putheader('X-VE-BanStr', ban_str)
 		http.endheaders()
 		response = http.getresponse()
-	except: return -1
+	except (httplib.HTTPException, socket.error, socket.timeout) as ex:
+		return 503
 
 	return response.status
 
@@ -106,7 +120,7 @@ def handle_ban(ban):
 	ban_str = ""
 
 	for param in ban['parameters']:
-		if param == '_id': continue
+		if param in [ '_id', '_class' ]: continue
 		try: fk = fk_map[param]
 		except:
 			log( "[%s] unknown parameter %s in fk_map - ignoring ban" % (ban['_id'], param) )
@@ -114,7 +128,7 @@ def handle_ban(ban):
 			return
 			
 		if ban_str != "": ban_str += ' && '
-		ban_str += 'obj.http.' + fk + ' == ' + str(ban['parameters'][param])
+		ban_str += 'req.http.' + fk + ' == ' + str(ban['parameters'][param])
 
 	log ( "[%s] ban_str: %s" % ( ban['_id'], ban_str ) )
 
@@ -180,25 +194,29 @@ def vbaner():
 
 	running = True
 
+	newreq_p = Process(target=handle_new_req)
+	newreq_p.start()
+
 	while running:
 		try:
-			for doc in new_requests.find():
-				handle_new_req(doc)
 			for doc in bans.find({ 'status': { "$in": [ 'pending', 'processing', 'wait-for-retry' ] } } ):
+				if not running: break
 				handle_ban(doc)
 		except pymongo.errors.OperationFailure as e:
 			log( e.details )
-			log( 'mongodb query failed, aborting.' )
-			running = False
+			log( 'mongodb query failed, retrying.' )
 		except pymongo.errors.AutoReconnect:
 			log( 'lost connection, reconnecting in 5 seconds' )
 			time.sleep(5)
 		except:
 			if not running: break
-			else: raise
+			else:
+				newreq_p.terminate()
+				raise
 
 		time.sleep(1)
 
+	newreq_p.join()
 	cleanup()
 
 def check_running():
@@ -212,7 +230,7 @@ def check_running():
 def main():
 	global args
 
-	parser = argparse.ArgumentParser(description='VirtualExpo Varnish AutoBan manager')
+	parser = argparse.ArgumentParser(description='Virtual Expo Varnish AutoBan manager')
 	parser.add_argument('--nodaemon', action='store_true', help='stay in foreground')
 	parser.add_argument('--stdout',   action='store_true', help='log to stdout instead of syslog')
 	parser.add_argument('--facility', nargs=1, default=syslog_facility, help='syslog facility to log to')
