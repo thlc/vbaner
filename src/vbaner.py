@@ -143,7 +143,7 @@ def handle_ban(ban):
 			return
 			
 		if ban_str != "": ban_str += ' && '
-		ban_str += 'req.http.' + fk + ' == ' + str(ban['parameters'][param])
+		ban_str += 'obj.http.' + fk + ' == ' + str(ban['parameters'][param])
 
 	log ( "[%s] ban_str: %s" % ( ban['_id'], ban_str ) )
 
