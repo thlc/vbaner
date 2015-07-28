@@ -7,7 +7,7 @@
 #
 
 from datetime import datetime
-from multiprocessing import Process
+import threading
 import pymongo
 import socket
 import httplib
@@ -19,6 +19,21 @@ import syslog
 
 # debug
 import code
+
+class StsThread(threading.Thread):
+    def __init__(self, *args, **kwargs):
+        super(StsThread, self).__init__(*args, **kwargs)
+
+        self._return = None
+
+    def run(self):
+        if self._Thread__target is not None:
+            self._return = self._Thread__target(*self._Thread__args, **self._Thread__kwargs)
+
+    def join(self, *args, **kwargs):
+        super(StsThread, self).join(*args, **kwargs)
+
+        return self._return
 
 # source the configuration
 execfile(os.path.dirname(sys.argv[0]) + '/conf.py')
@@ -101,10 +116,10 @@ def do_ban(host, ban_str):
 		http.putheader('X-VE-BanStr', ban_str)
 		http.endheaders()
 		response = http.getresponse()
+		return response.status
 	except (httplib.HTTPException, socket.error, socket.timeout) as ex:
 		return 503
 
-	return response.status
 
 def handle_ban(ban):
 	ban_on = srvlist.copy()
@@ -136,12 +151,21 @@ def handle_ban(ban):
 	log ( "[%s] try %i/%i" % ( ban['_id'], get_ban_tries(ban), max_tries) )
 
 	err = 0
+        ban_threads = []
+
 	for srv in ban_on:
-		ret = do_ban(ban_on[srv], ban_str)
+                th = StsThread(target=do_ban, args=(ban_on[srv], ban_str))
+		th.daemon = True
+		th.name = srv
+		ban_threads.append(th)
+		th.start()
+
+        for th in ban_threads:
+		ret = th.join()
 		if ret == 200:
-			set_ban_extended_status(ban, srv, "OK")
+			set_ban_extended_status(ban, th.name, "OK")
 		else:
-			set_ban_extended_status(ban, srv, "FAIL/[err=%i]" % ret)
+			set_ban_extended_status(ban, th.name, "FAIL/[err=%i]" % ret)
 			err += 1
 
 	if err == 0:			set_ban_status(ban, "completed")
@@ -194,8 +218,9 @@ def vbaner():
 
 	running = True
 
-	newreq_p = Process(target=handle_new_req)
-	newreq_p.start()
+	newreq_t = threading.Thread(target=handle_new_req)
+        newreq_t.daemon = True
+        newreq_t.start()
 
 	while running:
 		try:
@@ -210,13 +235,11 @@ def vbaner():
 			time.sleep(5)
 		except:
 			if not running: break
-			else:
-				newreq_p.terminate()
-				raise
+			else: raise
 
 		time.sleep(1)
 
-	newreq_p.join()
+	newreq_t.join()
 	cleanup()
 
 def check_running():
