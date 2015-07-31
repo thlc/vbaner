@@ -2,7 +2,7 @@
 # vban.py configuration file
 #
 
-# for future use
+# the higher, the better
 default_priority = 5
 
 # max retries before giving up on a ban

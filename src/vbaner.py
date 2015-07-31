@@ -22,18 +22,18 @@ import code
 
 class StsThread(threading.Thread):
     def __init__(self, *args, **kwargs):
-        super(StsThread, self).__init__(*args, **kwargs)
+	super(StsThread, self).__init__(*args, **kwargs)
 
-        self._return = None
+	self._return = None
 
     def run(self):
-        if self._Thread__target is not None:
-            self._return = self._Thread__target(*self._Thread__args, **self._Thread__kwargs)
+	if self._Thread__target is not None:
+	    self._return = self._Thread__target(*self._Thread__args, **self._Thread__kwargs)
 
     def join(self, *args, **kwargs):
-        super(StsThread, self).join(*args, **kwargs)
+	super(StsThread, self).join(*args, **kwargs)
 
-        return self._return
+	return self._return
 
 # source the configuration
 execfile(os.path.dirname(sys.argv[0]) + '/conf.py')
@@ -44,9 +44,9 @@ running = True
 
 # mapping between mongodb attribute and varnish HTTP pseudo-header
 fk_map = { 'companyId': 'X-VE-FK-CompanyID',
-           'site': 'X-VE-Site',
-           'matchRule': 'X-VE-MatchedRule'
-         }
+	   'site': 'X-VE-Site',
+	   'matchRule': 'X-VE-MatchedRule'
+	 }
 
 # CLI arguments
 args = False
@@ -75,25 +75,31 @@ def handle_new_req():
 			else:
 			  origin = 'backoffice'
 
+			if 'priority' in req:
+			  priority = req['priority']
+			  del req['priority']
+			else:
+			  priority = default_priority
+
 			newban_id = bans.insert({	'_id': request_id,
 							'status': 'pending',
 							'parameters': req,
 							'extendedStatus': servers_pending,
-							'priority': default_priority,
+							'priority': priority,
 							'origin': origin,
 							'tries': 0,
 							'createdAt': datetime.utcnow()
 					}, manipulate=True, j=True)
 
 			new_requests.remove( { '_id': request_id } )
-			log( "reqid:%s imported as %s" % (request_id, newban_id) )
+			log( "[%s -> %s] priority:%s" % (request_id, newban_id, priority) )
 
 def set_ban_status(ban, status):
 	log ( "[%s] status: %s" % (ban['_id'], status) )
 	bans.update( { '_id': ban['_id'] }, { "$set": { "status": status } })
 
 def set_ban_extended_status(ban, srv, status):
-	log ( "[%s] extended_status: %s=%s" % (ban['_id'], srv, status) )
+	#log ( "[%s] extended_status: %s=%s" % (ban['_id'], srv, status) )
 	ban2 = bans.find_one( { '_id': ban['_id'] } )
 	sts = ban2['extendedStatus'].copy()
 	sts[srv] = status
@@ -102,7 +108,7 @@ def set_ban_extended_status(ban, srv, status):
 
 def get_ban_tries(ban):
 	try: return bans.find_one({ '_id': ban['_id'] } )['tries']
-        except: return 0
+	except: return 0
 
 def increment_ban_tries(ban):
 	bans.update({ '_id': ban['_id'] }, { "$inc": { "tries": 1 } } )
@@ -147,26 +153,31 @@ def handle_ban(ban):
 
 	log ( "[%s] ban_str: %s" % ( ban['_id'], ban_str ) )
 
-        increment_ban_tries(ban)
+	increment_ban_tries(ban)
 	log ( "[%s] try %i/%i" % ( ban['_id'], get_ban_tries(ban), max_tries) )
 
 	err = 0
-        ban_threads = []
+	ban_threads = []
 
 	for srv in ban_on:
-                th = StsThread(target=do_ban, args=(ban_on[srv], ban_str))
+		th = StsThread(target=do_ban, args=(ban_on[srv], ban_str))
 		th.daemon = True
 		th.name = srv
 		ban_threads.append(th)
 		th.start()
 
-        for th in ban_threads:
+	output = "[%s] ext_sts: " % ban['_id']
+	for th in ban_threads:
 		ret = th.join()
 		if ret == 200:
 			set_ban_extended_status(ban, th.name, "OK")
+			output += " %s/OK" % th.name
 		else:
 			set_ban_extended_status(ban, th.name, "FAIL/[err=%i]" % ret)
+			output += " %s/FAIL" % th.name
 			err += 1
+
+	log ( output )
 
 	if err == 0:			set_ban_status(ban, "completed")
 	elif get_ban_tries(ban) >= max_tries:
@@ -219,12 +230,12 @@ def vbaner():
 	running = True
 
 	newreq_t = threading.Thread(target=handle_new_req)
-        newreq_t.daemon = True
-        newreq_t.start()
+	newreq_t.daemon = True
+	newreq_t.start()
 
 	while running:
 		try:
-			for doc in bans.find({ 'status': { "$in": [ 'pending', 'processing', 'wait-for-retry' ] } } ):
+			for doc in bans.find({ 'status': { "$in": [ 'pending', 'processing', 'wait-for-retry' ] } } ).sort([ ('priority', -1), ('createdAt', 1) ]).limit(1):
 				if not running: break
 				handle_ban(doc)
 		except pymongo.errors.OperationFailure as e:
@@ -259,8 +270,8 @@ def main():
 	parser.add_argument('--facility', nargs=1, default=syslog_facility, help='syslog facility to log to')
 	parser.add_argument('--priority', nargs=1, default=syslog_priority, help='syslog priority to use')
 
-        if check_running():
-        	print "daemon is already running"
+	if check_running():
+		print "daemon is already running"
 		sys.exit(1)
 
 	args = parser.parse_args()
