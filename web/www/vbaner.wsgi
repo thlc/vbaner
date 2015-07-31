@@ -4,6 +4,8 @@ import os
 import bottle
 import pymongo
 import pprint
+import time
+import datetime
 from time import sleep
 from bson.objectid import ObjectId
 from bottle import Bottle, template, static_file, post, request, redirect
@@ -43,9 +45,13 @@ def close_db():
 def bans_view():
     global bans
     open_db()
-    ban_list = bans.find()
+    ban_list = bans.find().sort('createdAt', pymongo.DESCENDING)
     close_db()
-    return template('bans_view.tpl', ban_list=ban_list)
+    if 'items' in request.query:
+      items = request.query['items']
+    else:
+      items = '100'
+    return template('bans_view.tpl', ban_list=ban_list, items=items)
 
 def bans_add():
     return template('bans_add.tpl')
@@ -53,7 +59,13 @@ def bans_add():
 def ban_submit():
     global new_requests
 
-    doc = { "origin": "vbaner/"+request.environ.get('REMOTE_ADDR') }
+    ban_type = request.forms.get('ban-type')
+
+    mrid = request.forms.get('matchRule')
+    site = request.forms.get('site')
+    companyId = request.forms.get('companyId')
+
+    doc = { "origin": "vbaner/"+request.environ.get('REMOTE_ADDR'), "priority": 10 }
 
     for attr in [ 'matchRule', 'site', 'companyId' ]:
         val = request.forms.get(attr)
