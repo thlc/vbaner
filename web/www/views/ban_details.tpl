@@ -15,9 +15,9 @@
   <tr><td>Submission Date</td><td>{{ban['createdAt']}}</td></tr>
   <tr><td>Extended Status</td><td>
 %    for srv in ban['extendedStatus']:
-%       if ban['extendedStatus'][srv] == u'OK':
+%       if ban['extendedStatus'][srv] == 'OK':
 <span>{{srv}}/</span><img src="/static/green.png" alt="{{srv}}" title="{{srv}}" />
-%       elif ban['extendedStatus'][srv] == u'PENDING':
+%       elif ban['extendedStatus'][srv] == 'PENDING':
 <span>{{srv}}/</span><img src="/static/blue.png" alt="{{srv}}" title="{{srv}}" />
 %       else:
 <span>{{srv}}/</span><img src="/static/red.png" alt="{{srv}}" title="{{srv}}" />

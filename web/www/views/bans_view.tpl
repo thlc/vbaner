@@ -23,6 +23,16 @@
 
 </form>
 
+<p>Incoming bans waiting to be imported:
+% if new_requests_count > 30:
+<span style='font-color: red;'>
+% elif new_requests_count > 10:
+<span style='font-color: orange;'>
+% else:
+<span style='font-color: black;'>
+% end
+{{new_requests_count}}</span></p>
+
 <table class='pretty'>
     <tr>
       <th>ID</th>
@@ -30,8 +40,10 @@
       <th>Tries</th>
       <th>ExtStatus</th>
       <th>Status</th>
+      <th><i>MatchRule</i></th>
       <th><i>CompanyID</i></th>
       <th><i>Site</i></th>
+      <th><i>Target</i></th>
     </tr>
 %  for ban in ban_list.limit(int(items)):
     <tr>
@@ -40,9 +52,9 @@
       <td>{{ban['tries']}}</td>
       <td>
 %    for srv in ban['extendedStatus']:
-%       if ban['extendedStatus'][srv] == u'OK':
+%       if ban['extendedStatus'][srv] == 'OK':
 <img src="/static/green.png" alt="{{srv}}" title="{{srv}}" />
-%       elif ban['extendedStatus'][srv] == u'PENDING':
+%       elif ban['extendedStatus'][srv] == 'PENDING':
 <img src="/static/blue.png" alt="{{srv}}" title="{{srv}}" />
 %       else:
 <img src="/static/red.png" alt="{{srv}}" title="{{srv}}" />
@@ -62,6 +74,11 @@
 %    end
       <td style="background: {{color}}">{{ban['status']}}</td>
       <td>
+%    if 'matchRule' in ban['parameters']:
+{{ban['parameters']['matchRule']}}
+%    end
+      </td>
+       <td>
 %    if 'companyId' in ban['parameters']:
 {{ban['parameters']['companyId']}}
 %    end
@@ -70,6 +87,11 @@
 %    if 'site' in ban['parameters']:
 {{ban['parameters']['site']}}
 %     end
+      </td>
+      <td>
+%    if 'target' in ban:
+{{ban['target']}}
+%    end
       </td>
     </tr>
 %  end

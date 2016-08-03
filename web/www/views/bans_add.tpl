@@ -15,7 +15,15 @@
 <form action="/ban/submit" method="post" style="width: 50%;">
  <table id='foo'>
  <tr><td>CompanyId</td><td><input name="companyId"></td></tr>
- <tr><td>MatchRule ID</td><td><input name="matchRule"></td></tr>
+ <tr><td>MatchRule ID</td><td>
+<select name="matchRule">
+  <option value="">choose a MR</option>
+  <option value="1">1 - foo</option>
+<option value="2">2 - bar</option>
+<option value="3">3 - baz</option>
+<option value="4">4 - ...</option>
+</select>
+</td></tr>
  <tr><td>Site</td><td>
  <select name='site'>
    <option value="" selected="selected">(all sites)</option>
