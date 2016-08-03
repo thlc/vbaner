@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3.2
 
 import os
 import bottle
@@ -38,12 +38,13 @@ def open_db():
 
 def close_db():
   global client
-  client.disconnect()
+  client.close()
 
 #### routes
 
 def bans_view():
     global bans
+    global new_requests
     open_db()
     ban_list = bans.find().sort('createdAt', pymongo.DESCENDING)
     close_db()
@@ -51,7 +52,8 @@ def bans_view():
       items = request.query['items']
     else:
       items = '100'
-    return template('bans_view.tpl', ban_list=ban_list, items=items)
+    new_requests_count = new_requests.find().count()
+    return template('bans_view.tpl', ban_list=ban_list, items=items, new_requests_count=new_requests_count)
 
 def bans_add():
     return template('bans_add.tpl')
@@ -64,10 +66,12 @@ def ban_submit():
     mrid = request.forms.get('matchRule')
     site = request.forms.get('site')
     companyId = request.forms.get('companyId')
+    target = request.forms.get('target')
+    url = request.forms.get('url')
 
     doc = { "origin": "vbaner/"+request.environ.get('REMOTE_ADDR'), "priority": 10 }
 
-    for attr in [ 'matchRule', 'site', 'companyId' ]:
+    for attr in [ 'matchRule', 'site', 'companyId', 'target' ]:
         val = request.forms.get(attr)
         if len(val) > 0:
             doc[attr] = val
