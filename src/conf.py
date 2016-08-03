@@ -15,7 +15,8 @@ db_addr = 'mongodb://user:passwd@mongodb_srv.company.com:27017/vban'
 fk_map = { 'companyId': 'X-VE-FK-CompanyID',
            'site': 'X-VE-Site',
            'matchRule': 'X-VE-MatchedRule',
-	   'vsClientId': 'X-VE-DS-ClientID'
+	   'vsClientId': 'X-VE-DS-ClientID',
+	   'url': 'X-URL'
          }
 
 # array of dicts for each server, with tags

@@ -34,6 +34,10 @@
       </select>
     </td></tr>
     <tr>
+      <td>vsClientId</td>
+      <td><input name="vsClientId"></td>
+    </tr>
+    <tr>
       <td>URL</td>
       <td><input name="url"></td>
     </tr>

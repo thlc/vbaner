@@ -67,11 +67,12 @@ def ban_submit():
     site = request.forms.get('site')
     companyId = request.forms.get('companyId')
     target = request.forms.get('target')
+    vsClientId = request.forms.get('vsClientId')
     url = request.forms.get('url')
 
     doc = { "origin": "vbaner/"+request.environ.get('REMOTE_ADDR'), "priority": 10 }
 
-    for attr in [ 'matchRule', 'site', 'companyId', 'target' ]:
+    for attr in [ 'matchRule', 'site', 'companyId', 'target', 'url', 'vsClientId' ]:
         val = request.forms.get(attr)
         if len(val) > 0:
             doc[attr] = val
