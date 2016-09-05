@@ -12,7 +12,9 @@
 
 <div style="margin: 0 auto; width: 400px;">
 
+<h3>HTML</h3>
 <form action="/ban/submit" method="post" style="width: 50%;">
+  <input type="hidden" name="target" value="html">
   <table id='foo'>
     <tr><td>CompanyId</td><td><input name="companyId"></td></tr>
     <tr><td>MatchRule ID</td><td>
@@ -37,25 +39,27 @@
       <td>vsClientId</td>
       <td><input name="vsClientId"></td>
     </tr>
+    <tr><td></td><td><button>Submit</button></td></tr>
+  </table>
+</form>
+
+<h3>Static</h3>
+<form action="/ban/submit" method="post" style="width: 50%;">
+  <input type="hidden" name="target" value="static">
+  <table id="foo">
     <tr>
       <td>URL</td>
       <td><input name="url"></td>
     </tr>
     <tr>
-      <td>Target</td>
-      <td>
-	<select name='target'>
-	  <option value="html" selected="selected">html</option>
-	  <option value="static">static</option>
-	</select>
-      </td>
+      <td>Subdomain</td>
+      <td><input name="subdomain"></td>
     </tr>
     <tr><td></td><td><button>Submit</button></td></tr>
   </table>
 </form>
-
+ 
 </div>
-
 
 </div>
 </body>

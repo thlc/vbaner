@@ -16,6 +16,7 @@ fk_map = { 'companyId': 'X-VE-FK-CompanyID',
            'site': 'X-VE-Site',
            'matchRule': 'X-VE-MatchedRule',
 	   'vsClientId': 'X-VE-DS-ClientID',
+	   'subdomain': 'X-Host-Subdomain',
 	   'url': 'X-URL'
          }
 
