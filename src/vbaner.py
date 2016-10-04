@@ -227,7 +227,7 @@ def intr_handler(signum, frame):
 
 def connect():
         while True:
-                try: client = pymongo.MongoClient(db_addr, socketTimeoutMS=10000, connectTimeoutMS=5000)
+                try: client = pymongo.MongoClient(db_addr, socketTimeoutMS=10000, connectTimeoutMS=5000, replSet=repl_set)
                 except pymongo.errors.ConnectionFailure as e:
                         log( 'unable to connect to %s, retrying in 5 seconds' % (db_addr) )
                 else:

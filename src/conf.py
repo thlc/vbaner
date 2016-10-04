@@ -10,6 +10,7 @@ max_tries = 3
 
 # mongodb URL
 db_addr = 'mongodb://user:passwd@mongodb_srv.company.com:27017/vban'
+repl_set = 'rp0'
 
 # mapping between mongodb attribute and varnish HTTP pseudo-header
 fk_map = { 'companyId': 'X-VE-FK-CompanyID',
